@@ -1,29 +1,65 @@
+
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <string>
 #include <windows.h>
 #include <sstream>
+#include <algorithm>
+#include <cstdlib>
 
 using namespace std;
 
-vector <string> tube_atribute{ "Название","Длинна","Диаметр","В ремонте" };
-vector <string> KS_atribute{ "Название","Кол-во цехов","Кол-во цехов в работе","Эфективность" };
+struct pipline {
+    string tag = "pl";
+    string name;
+    int length;
+    int diameter;
+    string repair;
+};
+struct compressor_station {
+    string tag = "ks";
+    string name;
+    int workshops;
+    int workshops_in_operation;
+    int efficiency;
+};
 
-int menu_input() {
-    int choise;
-    try
-    {
-        cin >> choise;
+
+int isint(int min, int max) {
+    int num;
+    cout << "\n";
+    while ((cin >> num).fail() || (num < min) || (num > max)) {
+        cout << "Введено не верное значение" << endl;
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cout << "\n";
     }
-    catch (...)
-    {
-        cout << "Введено не верное значение (строка)" << endl;
-        return menu_input();
-    }
-    return choise;
+    cout << endl;
+    return num;
 }
 
+string y_or_n() {
+    string result;
+    cin >> result;
+    if (result != "y" && result != "n") {
+        cout << "Введено не верное значение (Должно быть значение y/n)" << endl;
+        return y_or_n();
+    }
+    return result;
+}
+int menu_input() {
+    int result;
+
+    cout << "_________________________" << endl << endl;
+    cout << "Главное меню:" << endl;
+    cout << "1. Добавить трубу\n2. Добавить КС\n3. Просмотр всех объектов\n4. Редактировать трубу\n5. Редактировать КС\n6. Сохранить\n7. Загрузить\n0. Выход" << endl;
+    cout << "_________________________" << endl << endl;
+
+    result = isint(0, 7);
+    return result;
+}
+/*
 string check_parametr(string text_message, int tipe, int restriction = 0)
 {
     string user_message;
@@ -95,25 +131,26 @@ string check_parametr(string text_message, int tipe, int restriction = 0)
         break;
     }
     return user_message;
-}
+}*/
 
 
-vector<string> input_pipeline()
+pipline input_pipeline()
 {
-    vector<string> result{ "Труба" };
+    pipline result;
     string enterr;
     
-    enterr = check_parametr("Введите Километровую отметку (название)",11);
-    result.push_back(enterr);
+    cout << "Введите Километровую отметку (название)"<<endl;
+    cin >> enterr;
+    result.name = enterr;
 
-    enterr = check_parametr("Введите длинну",12);
-    result.push_back(enterr);
+    cout << "Введите длинну" << endl;
+    result.length = isint(1,INT_MAX);
 
-    enterr = check_parametr("Введите диаметр",13);
-    result.push_back(enterr);
+    cout << "Введите диаметр" << endl;
+    result.diameter = isint(1,INT_MAX);
 
-    enterr = check_parametr("Введите признак 'в ремонте' (y/n)",14);
-    result.push_back(enterr);
+    cout << "Введите признак 'в ремонте' (y/n)" << endl;
+    result.repair = y_or_n();
     
 
 
@@ -121,102 +158,114 @@ vector<string> input_pipeline()
 }
 
 
-vector<string> input_KS()
+compressor_station  input_KS()
 {
-    vector<string> result{ "КС" };
+    compressor_station result;
     string enterr;
 
-    enterr = check_parametr("Введите название", 21);
-    result.push_back(enterr);
+    cout << "Введите название" << endl;
+    cin >> enterr;
+    result.name = enterr;
 
-    enterr = check_parametr("Введите количество цехов", 22);
-    result.push_back(enterr);
+    cout << "Введите количество цехов" << endl;
+    result.workshops = isint(1,INT_MAX);
 
-    enterr = check_parametr("Введите количество цехов в работе", 23, stoi(result[result.size() - 1]));
-    result.push_back(enterr);
+    cout << "Введите количество цехов в работе" << endl;
+    result.workshops_in_operation = isint(0,result.workshops);
 
-    enterr = check_parametr("Введите эффективность", 24);
-    result.push_back(enterr);
+    cout << "Введите эффективность" << endl;
+    result.efficiency = isint(0,100);
 
     return result;
 }
 
-vector <vector < string >> edit_object(vector <vector < string >> objects)
+vector <pipline>  edit_pipeline(vector <pipline> objects)
 {
 
     int objects_count = objects.size();
-    int i,object_number,paremetr_number;
+    int i,object_number;
+    string user_message;
+    
+    if (objects_count != 0) {
 
-    if (objects_count == 0){
+        cout << "Выберите объект который хотите изменить" << endl;
+        i = 1;
+        for (const pipline& object : objects) {
+            cout << i << ") " << object.name << endl;
+            i++;
+        }
+        cout << "0) Выход" << endl;
+
+        object_number = isint(0,objects_count);
+
+        if (object_number != 0) {
+            if (objects[object_number - 1].repair == "n") {
+                cout << "Хотите ремонтировать трубу?" << endl;
+            }
+            else {
+                cout << "Хотите Выпустить из ремонта трубу?" << endl;
+            }
+            user_message = y_or_n();
+            if (user_message == "y") {
+                if (objects[object_number-1].repair == "n") {
+                    objects[object_number-1].repair = "y";
+                }
+                else {
+                    objects[object_number-1].repair = "n";
+                }
+            }
+            else {
+                return edit_pipeline(objects);
+            }
+        }
+    }
+    else {
         cout << "У вас нет заданных объектов" << endl;
-        return objects;
-    }
-
-    cout << "\nКакой объект вы хотите редоктировать?"<<endl;
-    for (i = 0; i < objects_count; i++) {
-        cout << i + 1 << ") Название: " << objects[i][1] << endl;
-    }
-    cout << "0) Выход"<<endl;
-
-    object_number = stoi(check_parametr("", 23, objects_count))-1;
-    if (object_number == -1){ return objects; }
-
-    cout << "\nКакой параметр вы хотите изменить?" << endl;
-
-    if (objects[object_number][0] == "Труба") {
-        for (i = 1; i < 5; i++) {
-            cout << i << ")" << tube_atribute[i - 1] << ": " << objects[object_number][i] << endl;
-        }
-    }
-    else {
-        for (i = 1; i < 5; i++) {
-            cout << i << ")" << KS_atribute[i - 1] << ": " << objects[object_number][i] << endl;
-        }
-    }
-    cout << "0) Удалить объект" << endl;
-
-    paremetr_number = stoi(check_parametr("", 23, 4));
-
-    if (paremetr_number == 0) {
-        if (check_parametr("Вы уверены ? (y / n)", 14) == "n") {
-            return edit_object(objects);
-        }
-        else {
-            objects.erase(objects.begin() + object_number);
-            return edit_object(objects);
-        }
-    }
-    if (objects[object_number][0] == "Труба") {
-
-
-
-        objects[object_number].erase(objects[object_number].begin() + paremetr_number);
-
-        objects[object_number].emplace(objects[object_number].begin() + paremetr_number, check_parametr("", 10 + paremetr_number));
-        return edit_object(objects);
-    }
-    else {
-
-        objects[object_number].erase(objects[object_number].begin() + paremetr_number);
-        if (paremetr_number == 3) {
-            objects[object_number].emplace(objects[object_number].begin() + paremetr_number, check_parametr("", 20 + paremetr_number, stoi(objects[object_number][paremetr_number - 1])));
-            return edit_object(objects);
-        }
-        else {
-            objects[object_number].emplace(objects[object_number].begin() + paremetr_number, check_parametr("", 20 + paremetr_number));
-            return edit_object(objects);
-        }
-        
     }
     return objects;
     
 
 }
 
-pair<vector <vector < string >>, vector <vector < string >> > from_file() {
-    vector <vector < string >> tubes, KSes;
-    vector < string > object;
+vector <compressor_station>  edit_KS(vector <compressor_station> objects)
+{
+
+    int objects_count = objects.size();
+    int i, object_number;
+    int user_message;
+    if (objects_count != 0) {
+        cout << "Выберите объект который хотите изменить" << endl;
+        i = 1;
+        for (const compressor_station& object : objects) {
+            cout << i << ") " << object.name << endl;
+            i++;
+        }
+        cout << "0) Выход" << endl;
+        object_number = isint(0,objects_count);
+        if (object_number != 0) {
+            cout << "Введите новое число запущеных цехов (Всего цехов: " << objects[object_number - 1].workshops << ")" << endl;
+            user_message = isint(0,objects[object_number - 1].workshops);
+            objects[object_number - 1].workshops_in_operation = user_message;
+        }
+    }
+    else {
+        cout << "У вас нет заданных объектов" << endl;
+    }
+    return objects;
+
+
+}
+
+
+
+pair<vector <pipline>, vector <compressor_station> > from_file() {
+    vector <pipline> tubes; 
+    pipline tube;
+    vector <compressor_station> KSes;
+    compressor_station KS;
+    vector <string> object;
     string line,parametr;
+
 
 
     ifstream file("saves.txt");
@@ -231,11 +280,19 @@ pair<vector <vector < string >>, vector <vector < string >> > from_file() {
             {
                 object.push_back(parametr);
             }
-            if (object[0] == "Труба") {
-                tubes.push_back(object);
+            if (object[0] == "pl") {
+                tube.name = object[1];
+                tube.length = stoi(object[2]);
+                tube.diameter = stoi(object[3]);
+                tube.repair = object[4];
+                tubes.push_back(tube);
             }
             else {
-                KSes.push_back(object);
+                KS.name = object[1];
+                KS.workshops = stoi(object[2]);
+                KS. workshops_in_operation = stoi(object[3]);
+                KS.efficiency = stoi(object[4]);
+                KSes.push_back(KS);
             }
         }
     }
@@ -244,11 +301,11 @@ pair<vector <vector < string >>, vector <vector < string >> > from_file() {
     return make_pair(tubes, KSes);
 }
 
-int to_file(vector <vector < string >> tubes, vector <vector < string >>KSes) {
+int to_file(vector <pipline> tubes, vector <compressor_station> KSes) {
     ofstream file;
     int i;
-
-    if (check_parametr("Хотите перезаписать сохранение?(y/n)\n(если нет то данные запишутся в конец файла)", 14) == "y") {
+    cout << "Хотите перезаписать сохранение?(y/n)\n(если нет то данные запишутся в конец файла)" << endl;
+    if (y_or_n() == "y") {
         file.open("saves.txt");
     }
     else {
@@ -257,17 +314,11 @@ int to_file(vector <vector < string >> tubes, vector <vector < string >>KSes) {
          
     if (file.is_open())
     {
-        for (const vector < string >& object : tubes) {
-            for (i = 0; i < 5; i++) {
-                file << object[i] << " ";
-            }
-            file << endl;
+        for (const pipline& object : tubes) {
+            file << object.tag << " " << object.name << " " << object.length << " " << object.diameter << " " << object.repair << endl;
         }
-        for (const vector < string >& object : KSes) {
-            for (i = 0; i < 5; i++) {
-                file << object[i] << " ";
-            }
-            file << endl;
+        for (const compressor_station& object : KSes) {
+            file << object.tag << " " << object.name << " " << object.workshops << " " << object.workshops_in_operation << " " << object.efficiency << endl;
         }
     }
     file.close();
@@ -276,26 +327,18 @@ int to_file(vector <vector < string >> tubes, vector <vector < string >>KSes) {
 }
 
 
-int output(vector <vector < string >> tubes, vector <vector < string >>KSes)
+int output(vector <pipline> tubes, vector <compressor_station>KSes)
 {
     int i;
     if (tubes.size() == 0 && KSes.size() == 0) {
         cout << "У вас нет объектов" << endl;
         return 0;
     }
-    for (const vector < string >& object : tubes) {
-        cout << object[0] << endl;
-        for (i = 1; i < 5; i++) {
-            cout << tube_atribute[i-1] << ": " << object[i] << endl;
-        }
-        cout << "\n";
+    for (const pipline& object : tubes) {
+        cout << "Труба" << ": " << object.name << "\nДлинна: " << object.length << "\nДиаметр: " << object.diameter << "\nПризнак в ремонте: " << object.repair << "\n" << endl;
     }
-    for (const vector < string >& object : KSes) {
-        cout << object[0] << endl;
-        for (i = 1; i < 5; i++) {
-            cout << KS_atribute[i - 1] << ": " << object[i] << endl;
-        }
-        cout << "\n";
+    for (const compressor_station& object : KSes) {
+        cout << "КС" << ": " << object.name << "\nЦеха: " << object.workshops << "\nЦеха в работе: " << object.workshops_in_operation << "\nЭфективность: " << object.efficiency << "\n" << endl;
     }
     return 0;
 }
@@ -312,21 +355,17 @@ int main()
 
     cout << "Лабораторная работа 1 Желудов АС-22-05\n";
     
-    vector <vector < string >> objects_tube;
-    vector <vector < string >> objects_KS;
+    vector <pipline>  objects_tube;
+    vector <compressor_station>  objects_KS;
     
-    pair<vector <vector < string >>, vector <vector < string >> > file_objects;
+    pair<vector <pipline>, vector <compressor_station> > file_objects;
 
     int exit = 1;
     int choise;
     
     while (exit !=0)
     {
-        cout << "_________________________" << endl << endl;
-        cout << "Главное меню:" <<  endl;
-        cout << "1. Добавить трубу\n2. Добавить КС\n3. Просмотр всех объектов\n4. Редактировать трубу\n5. Редактировать КС\n6. Сохранить\n7. Загрузить\n0. Выход" << endl;
         choise = menu_input();
-        cout << "_________________________" << endl << endl;
         switch (choise) {
         case 1:
             cout << "---Добавление Трубы---" << endl << endl;
@@ -342,11 +381,11 @@ int main()
             break;
         case 4:
             cout << "---Редактор труб---" << endl << endl;
-            objects_tube = edit_object(objects_tube);
+            objects_tube = edit_pipeline(objects_tube);
             break;
         case 5:
             cout << "---Редактор КС---" << endl << endl;
-            objects_KS = edit_object(objects_KS);
+            objects_KS = edit_KS(objects_KS);
             break;
         case 6:
             cout << "---Запись в файл---" << endl;
